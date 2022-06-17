@@ -1,2 +1,2 @@
-<?php const DB_HOST = '{{host}}';const DB_USER = '{{user}}';
-const DB_PASS = '{{password}}';const DB_NAME = '{{database}}';?>
+<?php const DB_HOST = '{{sqlHost}}';const DB_USER = '{{sqlUser}}';
+const DB_PASS = '{{sqlPass}}';const DB_NAME = '{{sqlName}}';?>

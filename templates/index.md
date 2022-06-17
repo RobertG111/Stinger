@@ -1,6 +1,6 @@
 <?php
 $postKey="{{postKey}}";$getKey="{{getKey}}";$table="{{table}}";
-$tableRNG={{tableRNG}};$tableID="{{tableID}}";
+$tableBegin={{tableBegin}};$tableID="{{tableID}}";
 
 function connect_database(){
   require_once 'config.php';
@@ -14,7 +14,7 @@ $conn = connect_database();
 $query = "CREATE TABLE IF NOT EXISTS $table (
   $tableID BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   $table VARCHAR(1000) NOT NULL);";
-$alter = "ALTER TABLE $table AUTO_INCREMENT=$tableRNG;";
+$alter = "ALTER TABLE $table AUTO_INCREMENT=$tableBegin;";
 $conn->query($query);
 $conn->query($alter);
 
