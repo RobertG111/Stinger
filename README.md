@@ -16,4 +16,4 @@ The templates folder contains all the files created once setup.py is run. You ca
 * Index.php – Index Page
 * Config.php – Includes database configuration
 * Payload.py – Code to add to your reconnaissance script
-* Stinger.py – Used to clone data locally and delete the table
+* Stinger.py – Used to clone data locally and delete table
