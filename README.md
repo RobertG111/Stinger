@@ -10,3 +10,10 @@ Stinger is a secure, fast, lightweight program made specifically for fast reconn
 6. Once the reconnaissance is finished, run stinger.py to clone all data locally
 7. Use the Armageddon command to delete the table and all data
 For help use the -h in the command line
+
+# Files
+The templates folder contains all the files created once setup.py is run. You can modify these files as you wish. 
+* Index.php – Index Page
+* Config.php – Includes database configuration
+* Payload.py – Code to add to your reconnaissance script
+* Stinger.py – Used to clone data locally and delete the table
