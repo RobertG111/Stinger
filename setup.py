@@ -134,11 +134,9 @@ try:
         print("Connected to website")
         # Send Post Request
         request = requests.post(website, headers=postHeader) 
-        # Check if post request was successful
         if(request.status_code == 200):
             # Send Get Request
             request = requests.get(website, params={tableID:tableBegin} ,headers=getHeader) 
-            # Check if get request was sent successfully
             if(request.status_code == 200):
                 # Get data and decrypt  
                 requestData = bytearray.fromhex(request.headers.get("Content-Type"))
