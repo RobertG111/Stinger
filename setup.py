@@ -67,7 +67,7 @@ try:
     print("Creating Server Files")
     
     # Create index.php   
-    def createIndex(env): 
+    def createIndex(): 
         indexTemplate = env.get_template("index.md")
         renderIndex = indexTemplate.render(postKey=postKey, getKey=getKey, table=tableName, 
                                         tableBegin=tableBegin, tableID=tableID, armageddonKey=armageddonKey)
@@ -76,7 +76,7 @@ try:
         file.close()
     
     # Create config.php
-    def createConfig(env):
+    def createConfig():
         configTemplate = env.get_template("config.md")
         renderConfig = configTemplate.render(sqlHost=args.sqlHost, sqlUser=args.sqlUser, 
                                             sqlPass=args.sqlPass, sqlName=args.sqlName)
@@ -85,8 +85,8 @@ try:
         file.close()
         
     # Threading for Server Side File Creation
-    indexThread = threading.Thread(target=createIndex, args=(env,))
-    configThread = threading.Thread(target=createConfig ,args=(env,))
+    indexThread = threading.Thread(target=createIndex)
+    configThread = threading.Thread(target=createConfig)
     
     indexThread.start()
     configThread.start()
