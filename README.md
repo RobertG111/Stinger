@@ -9,6 +9,7 @@ Stinger is a secure, fast, lightweight program made specifically for fast reconn
 5. Insert the payload script into your reconnaissance script
 6. Once the reconnaissance is finished, run stinger.py to clone all data locally
 7. Use the Armageddon command to delete the table and all data
+
 For help use the -h in the command line
 
 # Files
