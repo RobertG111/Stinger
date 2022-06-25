@@ -138,7 +138,7 @@ try:
             # Send Get Request
             request = requests.get(website, params={tableID:tableBegin} ,headers=getHeader) 
             if(request.status_code == 200):
-                # Get data and decrypt  
+                # Get data and decrypt
                 requestData = bytearray.fromhex(request.headers.get("Content-Type"))
                 requestData = rsa.decrypt(requestData, privateKey)
                 #  Check if test passed

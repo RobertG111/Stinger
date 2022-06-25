@@ -17,8 +17,6 @@ headers = {
 start = {{tableBegin}}
 # Private key
 privateKey = {{privateKey}}
-# Threading Lock
-lock = threading.Lock()
 
 try:
     # Armageddon
@@ -32,7 +30,6 @@ try:
     def runStinger():
         global start
         while True:
-            lock.acquire()
             request = requests.get("{{website}}",params={"{{tableID}}":start},headers=headers)
             if(request.status_code == 200 and str(request.headers.get("Content-Type")) != "None"):
                 requestData = bytearray(bytes.fromhex(request.headers.get("Content-Type")))
@@ -45,16 +42,17 @@ try:
                 start = start + 1
             else:
                 if(request.status_code != 200 and args.stingerVerbose.upper() == "TRUE"):
-                    print("Request Error")
+                    print("Request Failed : " + str(request.status_code))
                 elif(args.stingerVerbose.upper() == "TRUE"):
                     print("No Data")
-            lock.release()
+                exit(1)
     
     # Threading
     def runStingerThreads():
         for i in range(args.stingerThreads):
             thread = threading.Thread(target=runStinger)
             thread.start()
+            thread.join()
     
     # Run threads
     runStingerThreads()
