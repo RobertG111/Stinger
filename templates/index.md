@@ -12,7 +12,6 @@ $conn->query($query);
 $conn->query($alter);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_SERVER['HTTP_ACCEPT'] == $postKey) {
-  $conn = connect_database();
   if(isset($_SERVER['HTTP_USER_AGENT'])){
     $data = $_SERVER['HTTP_USER_AGENT'];
     $query = "INSERT INTO $table ($table) VALUES ('$data')";
@@ -21,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_SERVER['HTTP_ACCEPT'] == $postKey
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && $_SERVER['HTTP_ACCEPT'] == $getKey) {
-  $conn = connect_database();
   if(isset($_GET['ARMAGEDDON']) && $_GET['ARMAGEDDON'] == "{{armageddonKey}}"){
     $query = "DROP TABLE $table";
     $conn->query($query);
